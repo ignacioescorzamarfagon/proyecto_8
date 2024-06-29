@@ -59,11 +59,38 @@ const postGame = async (req, res, next) => {
 const putGame = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const newGame = new Game(req.body);
-    newGame._id = id;
-    const gameUpdated = await Game.findByIdAndUpdate(id, newGame, {
+    console.log('Cuerpo de la solicitud:', req.body);
+    console.log('Archivo de la solicitud:', req.file);
+
+    // Creamos un objeto con los valores proporcionados
+    const updateGame = {
+      nombre: req.body.nombre,
+      imagen: req.file,
+      precio: req.body.precio,
+      categoria: req.body.categoria
+    };
+
+    // Verificamos si se ha enviado una imagen nueva de perfil, de ser así eliminamos la anterior y guardamos la nueva ruta
+    if (req.file) {
+      const game = await Game.findById(id);
+      if (game.imagen) {
+        deleteFile(game.imagen);
+      }
+      updateGame.imagen = req.file.path;
+    }
+
+    // Eliminamos las propiedades del objeto que son undefined
+    for (let key in updateGame) {
+      if (updateGame[key] === undefined) {
+        delete updateGame[key];
+      }
+    }
+
+    // Actualizamos el juego en la base de datos
+    const gameUpdated = await Game.findByIdAndUpdate(id, updateGame, {
       new: true
     });
+
     return res.status(200).json(gameUpdated);
   } catch (error) {
     return res.status(400).json('Error al actualizar un juego: ' + error);

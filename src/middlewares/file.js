@@ -2,6 +2,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+/*
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -11,5 +12,19 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+*/
 
-module.exports = upload;
+const createUploadMiddleware = (folder) => {
+  const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: folder,
+      allowedFormats: ['jpg', 'png', 'jpeg', 'gif', 'webp']
+    }
+  });
+
+  return multer({ storage });
+};
+
+//module.exports = upload;
+module.exports = createUploadMiddleware;

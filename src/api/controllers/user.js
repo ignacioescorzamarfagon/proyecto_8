@@ -82,4 +82,50 @@ const getUsers = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, deleteUser, getUsers };
+//Actualizar usuario
+const putUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    console.log('Cuerpo de la solicitud:', req.body);
+    console.log('Archivo de la solicitud:', req.file);
+
+    // Creamos un objeto con los valores proporcionados. Si se proporciona contraseña la encriptamos
+    const updateUser = {
+      email: req.body.email,
+      nombreUsuario: req.body.nombreUsuario,
+      contrasenia: req.body.contrasenia
+        ? bcrypt.hashSync(req.body.contrasenia, 10)
+        : undefined,
+      anioNacimiento: req.body.anioNacimiento,
+      rol: req.body.rol
+    };
+
+    // Verificamos si se ha enviado una imagen nueva de perfil, de ser así eliminamos la anterior y guardamos la nueva ruta
+    if (req.file) {
+      const user = await User.findById(id);
+      if (user.imagenPerfil) {
+        deleteFile(user.imagenPerfil);
+      }
+      updateUser.imagenPerfil = req.file.path;
+    }
+
+    // Si llegan propiedades como 'Undefined' las eliminamos
+    for (let key in updateUser) {
+      if (updateUser[key] === undefined) {
+        delete updateUser[key];
+      }
+    }
+    console.log('Objeto de actualización:', updateUser);
+    // Actualizamos el usuario en la BBDD
+    const userUpdated = await User.findByIdAndUpdate(id, updateUser, {
+      new: true
+    });
+
+    return res.status(200).json(userUpdated);
+  } catch (error) {
+    return res.status(400).json(error);
+  }
+};
+
+module.exports = { register, login, deleteUser, getUsers, putUser };

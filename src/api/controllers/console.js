@@ -54,6 +54,21 @@ const putConsole = async (req, res, next) => {
     const newConsole = new Console(req.body);
     newConsole._id = id;
     newConsole.juegos = [...oldConsole.juegos, ...req.body.juegos];
+
+    // Verificamos si se ha enviado una imagen nueva de perfil, de ser así eliminamos la anterior y guardamos la nueva ruta
+    if (req.file) {
+      if (oldConsole.imagen) {
+        deleteFile(oldConsole.imagen);
+      }
+      newConsole.imagen = req.file.path;
+    }
+
+    // Eliminamos las propiedades del objeto que son undefined
+    for (let key in newConsole) {
+      if (newConsole[key] === undefined) {
+        delete newConsole[key];
+      }
+    }
     const consoleUpdated = await Console.findByIdAndUpdate(id, newConsole, {
       new: true
     });
